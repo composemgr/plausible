@@ -1,41 +1,81 @@
 ## 👋 Welcome to plausible 🚀
 
-Plausible - Privacy-focused web analytics
+Privacy-friendly Google Analytics alternative
 
 ## 📋 Description
 
-Privacy-focused web analytics
+Privacy-friendly Google Analytics alternative
 
 ## 🚀 Services
 
-- **app**: Plausible (`plausible/analytics:latest`)
+- **app**: plausible/analytics:latest
 
 ## 📦 Installation
 
-```shell
+### Option 1: Quick Install
+```bash
+curl -q -LSsf "https://raw.githubusercontent.com/composemgr/plausible/main/docker-compose.yaml" -o compose.yml
+```
+
+### Option 2: Git Clone
+```bash
+git clone "https://github.com/composemgr/plausible" ~/.local/srv/docker/plausible
+cd ~/.local/srv/docker/plausible
+docker compose up -d
+```
+
+### Option 3: Using composemgr
+```bash
 composemgr install plausible
 ```
 
 ## 🔧 Configuration
 
+### Environment Variables
+
 ```shell
 TZ=America/New_York
-BASE_HOST_NAME=plausible.example.com
 ```
+
+See `docker-compose.yaml` for complete list of configurable options.
 
 ## 🌐 Access
 
-- **Plausible**: http://localhost:8000
+- **Web Interface**: http://172.17.0.1:8000
 
 ## 📂 Volumes
 
-- `./rootfs/data/plausible` - Application data
+- `./rootfs/data/plausible` - Data storage
 
-## 🔐 Security
+## 🔍 Logging
 
-- Change default passwords
-- Configure HTTPS with reverse proxy
-- Regular backups
+```shell
+docker compose logs -f app
+```
+
+## 🛠️ Management
+
+```bash
+# Start services
+docker compose up -d
+
+# Stop services
+docker compose down
+
+# Update to latest images
+docker compose pull && docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Restart services
+docker compose restart
+```
+
+## 📋 Requirements
+
+- Docker Engine 20.10+
+- Docker Compose V2+
 
 ## 🤝 Author
 
