@@ -20,7 +20,7 @@ services:
     ports:
       - '172.17.0.1:8000:8000'
     volumes:
-      - './rootfs/data/plausible:/data'
+      - './volumes/data/plausible:/data'
     networks:
       - plausible
 
