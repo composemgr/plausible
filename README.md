@@ -45,7 +45,7 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/data/plausible` - Data storage
+- `./volumes/data/plausible` - Data storage
 
 ## 🔍 Logging
 
