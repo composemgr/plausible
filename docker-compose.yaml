@@ -9,18 +9,70 @@ x-logging: &default-logging
 
 services:
   app:
-    image: plausible/analytics:latest
+    image: ghcr.io/plausible/community-edition:latest
     container_name: plausible-app
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
     logging: *default-logging
+    command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     environment:
       TZ: ${TZ:-America/New_York}
+      BASE_URL: https://${BASE_HOST_NAME:-localhost}.${BASE_DOMAIN_NAME:-example.com}
+      SECRET_KEY_BASE: ${APP_SECRET_KEY:-changeme_secret_key_min_32_chars}
+      DATABASE_URL: postgresql://${DB_USER_NAME:-plausible}:${DB_USER_PASS:-changeme_db_password}@plausible-db:5432/${DB_CREATE_DATABASE_NAME:-plausible}
+      CLICKHOUSE_DATABASE_URL: http://plausible-clickhouse:8123/plausible_events_db
+      SMTP_HOST_ADDR: ${EMAIL_SERVER_HOST:-localhost}
+      SMTP_HOST_PORT: ${EMAIL_SERVER_PORT:-587}
+      SMTP_USER_NAME: ${EMAIL_SERVER_USER:-""}
+      SMTP_USER_PWD: ${EMAIL_SERVER_PASS:-""}
+      MAILER_EMAIL: ${EMAIL_SERVER_MAIL_FROM:-noreply@example.com}
+      DISABLE_REGISTRATION: ${DISABLE_REGISTRATION:-true}
     ports:
       - '172.17.0.1:8000:8000'
+    depends_on:
+      plausible-db:
+        condition: service_healthy
+      plausible-clickhouse:
+        condition: service_healthy
+    networks:
+      - plausible
+
+  plausible-db:
+    image: postgres:latest
+    container_name: plausible-db
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      POSTGRES_DB: ${DB_CREATE_DATABASE_NAME:-plausible}
+      POSTGRES_USER: ${DB_USER_NAME:-plausible}
+      POSTGRES_PASSWORD: ${DB_USER_PASS:-changeme_db_password}
     volumes:
-      - './volumes/data/plausible:/data'
+      - './volumes/data/db/postgres/plausible:/var/lib/postgresql/data'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER_NAME:-plausible}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - plausible
+
+  plausible-clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: plausible-clickhouse
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    volumes:
+      - './volumes/data/db/clickhouse/plausible:/var/lib/clickhouse'
+      - './volumes/config/plausible/clickhouse:/etc/clickhouse-server/config.d'
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - plausible
 
