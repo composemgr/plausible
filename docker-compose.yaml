@@ -1,4 +1,4 @@
-# nginx proxy address - http://172.17.0.1:8000
+# nginx proxy address - http://172.17.0.1:64305
 
 name: plausible
 x-logging: &default-logging
@@ -30,33 +30,15 @@ services:
       DISABLE_REGISTRATION: ${DISABLE_REGISTRATION:-true}
       CONTAINER_NAME: plausible-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
-    ports:
-      - '172.17.0.1:8000:8000'
     depends_on:
       plausible-db:
         condition: service_healthy
       plausible-clickhouse:
         condition: service_healthy
+    ports:
+      - '172.17.0.1:64305:8000'
     networks:
       - plausible
-      - proxy
-      - cloudflare
-    labels:
-      - 'traefik.enable=true'
-      - 'cloudflare.enable=true'
-      - 'traefik.docker.network=proxy'
-      - 'cloudflare.service=http://plausible-app:8000'
-      - 'cloudflare.hostname=plausible.${CLOUDFLARE_ZONE_NAME:-}'
-      - 'traefik.http.routers.plausible-app.entrypoints=http'
-      - 'traefik.http.routers.plausible-app-secure.tls=true'
-      - 'traefik.http.routers.plausible-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
-      - 'traefik.http.middlewares.plausible-app-https-redirect.redirectscheme.scheme=https'
-      - 'traefik.http.routers.plausible-app.middlewares=plausible-app-https-redirect'
-      - 'traefik.http.routers.plausible-app-secure.entrypoints=https'
-      - 'traefik.http.routers.plausible-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
-      - 'traefik.http.routers.plausible-app-secure.tls.certresolver=cloudflare'
-      - 'traefik.http.routers.plausible-app-secure.service=plausible-app'
-      - 'traefik.http.services.plausible-app.loadbalancer.server.port=8000'
 
   plausible-db:
     image: postgres:latest
@@ -103,7 +85,3 @@ networks:
   plausible:
     name: plausible
     external: false
-  proxy:
-    external: true
-  cloudflare:
-    external: true
